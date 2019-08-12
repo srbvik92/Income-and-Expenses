@@ -1,0 +1,270 @@
+package com.example.expensesandincome;
+
+import android.content.Context;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Iterator;
+
+import javax.net.ssl.HttpsURLConnection;
+
+
+/**
+ * A simple {@link Fragment} subclass.
+ * Activities that contain this fragment must implement the
+ * {@link IncomeWebView.OnFragmentInteractionListener} interface
+ * to handle interaction events.
+ * Use the {@link IncomeWebView#newInstance} factory method to
+ * create an instance of this fragment.
+ */
+public class IncomeWebView extends Fragment {
+    // TODO: Rename parameter arguments, choose names that match
+    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM2 = "param2";
+
+    // TODO: Rename and change types of parameters
+    private String mParam1;
+    private String mParam2;
+
+    String line;
+    int nid[];
+    String username;
+    String type[];
+    int amt[];
+    int length;
+    View columnView;
+
+
+    private OnFragmentInteractionListener mListener;
+
+    public IncomeWebView() {
+        // Required empty public constructor
+    }
+
+    /**
+     * Use this factory method to create a new instance of
+     * this fragment using the provided parameters.
+     *
+     * @param param1 Parameter 1.
+     * @param param2 Parameter 2.
+     * @return A new instance of fragment IncomeWebView.
+     */
+    // TODO: Rename and change types and number of parameters
+    public static IncomeWebView newInstance(String param1, String param2) {
+        IncomeWebView fragment = new IncomeWebView();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM2, param2);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            mParam1 = getArguments().getString(ARG_PARAM1);
+            mParam2 = getArguments().getString(ARG_PARAM2);
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        columnView = inflater.inflate(R.layout.fragment_income_web_view, container, false);
+        new SendPostRequest().execute();
+        return columnView;
+    }
+
+    // TODO: Rename method, update argument and hook method into UI event
+    public void onButtonPressed(Uri uri) {
+        if (mListener != null) {
+            mListener.onFragmentInteraction(uri);
+        }
+    }
+
+
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnFragmentInteractionListener {
+        // TODO: Update argument type and name
+        void onFragmentInteraction(Uri uri);
+    }
+
+
+    public class SendPostRequest extends AsyncTask<String, Void, String> {
+
+
+
+        protected void onPreExecute(){}
+
+        protected String doInBackground(String... arg0) {
+
+            try {
+
+                username = "srbvik92";
+
+                URL url = new URL("http://10.0.2.2:80/expenses/expenses_android.php"); // here is your URL path
+
+                JSONObject postDataParams = new JSONObject();
+                postDataParams.put("uname",Variables.username);
+                //postDataParams.put("pass",pass);
+                Log.e("params",postDataParams.toString());
+
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(15000 /* milliseconds */);
+                conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getPostDataString(postDataParams));
+
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode=conn.getResponseCode();
+
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+
+                    BufferedReader in=new BufferedReader(new
+                            InputStreamReader(
+                            conn.getInputStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+
+                    while((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+
+                    JSONArray arr = new JSONArray(sb.toString());
+                    //nid = new int[arr.length()];
+                    type = new String[arr.length()];
+                    amt = new int[arr.length()];
+                    length = arr.length();
+
+                    for(int n=0;n<arr.length();n++){
+
+                        JSONObject obj = arr.getJSONObject(n);
+                        if (obj != null) {
+                            //nid[n]= Integer.parseInt(obj.getString("nid"));
+
+                            amt[n]=Integer.parseInt(obj.getString("amount"));
+                            type[n]=obj.getString("type");
+                            Log.e("bubi",type[n]);
+                        }
+                    }
+
+
+                    in.close();
+                    //user.setText(uname);
+
+                    Log.e("bubi",sb.toString());
+                    return sb.toString();
+
+
+
+                }
+                else {
+                    return new String("false : "+responseCode);
+                }
+            }
+            catch(Exception e){
+                return new String("Exception: " + e.getMessage());
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getActivity().getApplicationContext(), result,
+                    Toast.LENGTH_LONG).show();
+            //user.setText(loginMessage);
+
+
+            WebView pieChart = (WebView) columnView.findViewById(R.id.incomeColumnChart);
+
+            try{
+
+                pieChart.getSettings().setJavaScriptEnabled(true);
+                String postData = "username=" + URLEncoder.encode(Variables.username, "UTF-8");
+                pieChart.postUrl(Variables.servername+"android/income_column_chart_android.php", postData.getBytes());
+                //TextView a = (TextView) columnView.findViewById(R.id.textView4);
+                //a.setText(Variables.username);
+
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public String getPostDataString(JSONObject params) throws Exception {
+
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+
+        Iterator<String> itr = params.keys();
+
+        while(itr.hasNext()){
+
+            String key= itr.next();
+            Object value = params.get(key);
+
+            if (first)
+                first = false;
+            else
+                result.append("&");
+
+            result.append(URLEncoder.encode(key, "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
+
+        }
+        return result.toString();
+    }
+}

@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Expenses and Income</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string-array name="type_of_expenses_labels">
+        <item>Mobile Bill</item>
+        <item>Restaurant</item>
+        <item>Shopping</item>
+        <item>Petrol</item>
+        <item>Groceries</item>
+    </string-array>
+
+    <string-array name="type_of_expenses_values">
+        <item>mobilebill</item>
+        <item>restaurant</item>
+        <item>shopping</item>
+        <item>petrol</item>
+        <item>groceries</item>
+    </string-array>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+</resources>
